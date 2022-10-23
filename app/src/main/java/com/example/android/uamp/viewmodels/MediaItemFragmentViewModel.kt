@@ -33,6 +33,7 @@ import com.example.android.uamp.common.EMPTY_PLAYBACK_STATE
 import com.example.android.uamp.common.MusicServiceConnection
 import com.example.android.uamp.common.NOTHING_PLAYING
 import com.example.android.uamp.fragments.MediaItemFragment
+import com.example.android.uamp.logd
 import com.example.android.uamp.media.extensions.id
 import com.example.android.uamp.media.extensions.isPlaying
 
@@ -82,6 +83,7 @@ class MediaItemFragmentViewModel(
         val playbackState = it ?: EMPTY_PLAYBACK_STATE
         val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
         if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
+            "---playbackStateObserver----1, post change".logd()
             _mediaItems.postValue(updateState(playbackState, metadata))
         }
     }
@@ -96,6 +98,7 @@ class MediaItemFragmentViewModel(
         val playbackState = musicServiceConnection.playbackState.value ?: EMPTY_PLAYBACK_STATE
         val metadata = it ?: NOTHING_PLAYING
         if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
+            "---mediaMetadataObserver----2, post change".logd()
             _mediaItems.postValue(updateState(playbackState, metadata))
         }
     }
@@ -162,10 +165,13 @@ class MediaItemFragmentViewModel(
             else -> R.drawable.ic_play_arrow_black_24dp
         }
 
-        return mediaItems.value?.map {
+        val list = mediaItems.value?.map {
             val useResId = if (it.mediaId == mediaMetadata.id) newResId else NO_RES
             it.copy(playbackRes = useResId)
         } ?: emptyList()
+
+        "----> update state, list: ${list.size}".logd()
+        return list
     }
 
     class Factory(

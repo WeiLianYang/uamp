@@ -25,8 +25,9 @@
     <ImageView
         android:id="@+id/albumArt"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="200dp"
         android:contentDescription="@string/album_art_alt"
+        app:layout_constraintTop_toTopOf="parent"
         android:scaleType="centerCrop"
         app:srcCompat="@android:color/transparent" />
 
@@ -44,6 +45,46 @@
         android:background="@drawable/media_overlay_background"
         app:layout_constraintBottom_toBottomOf="@+id/albumArt"
         app:layout_constraintTop_toBottomOf="@id/divider" />
+
+    <Button
+        android:id="@+id/btn_previous"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/albumArt"
+        android:text="上一首"
+        tools:ignore="ContentDescription" />
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_previous"
+        android:text="下一首"
+        tools:ignore="ContentDescription" />
+
+    <Button
+        android:id="@+id/btn_back15s"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_next"
+        android:text="后退15秒"
+        tools:ignore="ContentDescription" />
+
+    <Button
+        android:id="@+id/btn_forward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_back15s"
+        android:text="快进15秒"
+        tools:ignore="ContentDescription" />
 
     <ImageButton
         android:id="@+id/media_button"

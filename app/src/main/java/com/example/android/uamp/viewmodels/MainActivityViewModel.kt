@@ -159,6 +159,26 @@ class MainActivityViewModel(
         }
     }
 
+    fun skipToNext() {
+        val transportControls = musicServiceConnection.transportControls
+        transportControls.skipToNext()
+    }
+
+    fun skipToPrevious() {
+        val transportControls = musicServiceConnection.transportControls
+        transportControls.skipToPrevious()
+    }
+
+    fun back15s() {
+        val transportControls = musicServiceConnection.transportControls
+        transportControls.rewind()
+    }
+
+    fun forward15s() {
+        val transportControls = musicServiceConnection.transportControls
+        transportControls.fastForward()
+    }
+
     class Factory(
         private val musicServiceConnection: MusicServiceConnection
     ) : ViewModelProvider.NewInstanceFactory() {

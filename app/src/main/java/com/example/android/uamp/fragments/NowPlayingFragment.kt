@@ -80,6 +80,18 @@ class NowPlayingFragment : Fragment() {
         binding.mediaButton.setOnClickListener {
             nowPlayingViewModel.mediaMetadata.value?.let { mainActivityViewModel.playMediaId(it.id) }
         }
+        binding.btnPrevious.setOnClickListener {
+            mainActivityViewModel.skipToPrevious()
+        }
+        binding.btnNext.setOnClickListener {
+            mainActivityViewModel.skipToNext()
+        }
+        binding.btnBack15s.setOnClickListener {
+            mainActivityViewModel.back15s()
+        }
+        binding.btnForward.setOnClickListener {
+            mainActivityViewModel.forward15s()
+        }
 
         // Initialize playback duration and position to zero
         binding.duration.text = NowPlayingMetadata.timestampToMSS(context, 0L)

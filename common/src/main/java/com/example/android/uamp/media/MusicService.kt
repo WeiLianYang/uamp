@@ -18,9 +18,7 @@ package com.example.android.uamp.media
 
 import android.app.Notification
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
@@ -35,6 +33,11 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.MediaBrowserServiceCompat.BrowserRoot.EXTRA_RECENT
+import com.example.android.uamp.logd
+import com.example.android.uamp.loge
+import com.example.android.uamp.logi
+import com.example.android.uamp.logv
+import com.example.android.uamp.logw
 import com.example.android.uamp.media.extensions.album
 import com.example.android.uamp.media.extensions.flag
 import com.example.android.uamp.media.extensions.id
@@ -55,7 +58,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EVENT_MEDIA_ITEM_TRANSITION
 import com.google.android.exoplayer2.Player.EVENT_PLAY_WHEN_READY_CHANGED
 import com.google.android.exoplayer2.Player.EVENT_POSITION_DISCONTINUITY
-import com.google.android.exoplayer2.Player.EVENT_TIMELINE_CHANGED
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.cast.CastPlayer
@@ -63,16 +65,14 @@ import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.util.Util.constrainValue
 import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable.children
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * This class is the entry point for browsing and playback commands from the APP's UI
@@ -190,7 +190,7 @@ open class MusicService : MediaBrowserServiceCompat() {
          * [MediaBrowserCompat.ConnectionCallback.onConnectionFailed].)
          */
         sessionToken = mediaSession.sessionToken
-
+        "---> onCreate <---, load source".logv()
         /**
          * The notification manager will use our player and media session to decide when to post
          * notifications. When notifications are posted or removed our listener will be called, this
@@ -234,6 +234,7 @@ open class MusicService : MediaBrowserServiceCompat() {
     override fun onTaskRemoved(rootIntent: Intent) {
         saveRecentSongToStorage()
         super.onTaskRemoved(rootIntent)
+        "---> onTaskRemoved <---".logw()
 
         /**
          * By stopping playback, the player will transition to [Player.STATE_IDLE] triggering
@@ -247,6 +248,7 @@ open class MusicService : MediaBrowserServiceCompat() {
     }
 
     override fun onDestroy() {
+        "---> onDestroy <---".loge()
         mediaSession.run {
             isActive = false
             release()
@@ -269,7 +271,7 @@ open class MusicService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-
+        "---> onGetRoot <---, clientPackageName: $clientPackageName".loge()
         /*
          * By default, all known clients are permitted to search, but only tell unknown callers
          * about search if permitted by the [BrowseTree].
@@ -292,8 +294,10 @@ open class MusicService : MediaBrowserServiceCompat() {
              */
             val isRecentRequest = rootHints?.getBoolean(EXTRA_RECENT) ?: false
             val browserRootPath = if (isRecentRequest) UAMP_RECENT_ROOT else UAMP_BROWSABLE_ROOT
+            "---> onGetRoot <---, isKnownCaller: true, browserRootPath: $browserRootPath".logd()
             BrowserRoot(browserRootPath, rootExtras)
         } else {
+            "---> onGetRoot <---, isKnownCaller: false, empty root".loge()
             /**
              * Unknown caller. There are two main ways to handle this:
              * 1) Return a root without any content, which still allows the connecting client
@@ -317,11 +321,14 @@ open class MusicService : MediaBrowserServiceCompat() {
         result: Result<List<MediaItem>>
     ) {
 
+        "---> onLoadChildren <---, parentMediaId: $parentMediaId".logv()
         /**
          * If the caller requests the recent root, return the most recently played song.
          */
         if (parentMediaId == UAMP_RECENT_ROOT) {
-            result.sendResult(storage.loadRecentSong()?.let { song -> listOf(song) })
+            val recentSong = storage.loadRecentSong()?.let { song -> listOf(song) }
+            "---> onLoadChildren <---, sendResult: ${recentSong.toString()}".logi()
+            result.sendResult(recentSong)
         } else {
             // If the media source is ready, the results will be set synchronously here.
             val resultsSent = mediaSource.whenReady { successfullyInitialized ->
@@ -329,9 +336,11 @@ open class MusicService : MediaBrowserServiceCompat() {
                     val children = browseTree[parentMediaId]?.map { item ->
                         MediaItem(item.description, item.flag)
                     }
+                    "---> onLoadChildren <---, sendResult: ${children.toString()}".logi()
                     result.sendResult(children)
                 } else {
                     mediaSession.sendSessionEvent(NETWORK_FAILURE, null)
+                    "---> onLoadChildren <---, sendResult: null".loge()
                     result.sendResult(null)
                 }
             }
@@ -356,7 +365,7 @@ open class MusicService : MediaBrowserServiceCompat() {
         extras: Bundle?,
         result: Result<List<MediaItem>>
     ) {
-
+        "---> onSearch <---, query: $query".logd()
         val resultsSent = mediaSource.whenReady { successfullyInitialized ->
             if (successfullyInitialized) {
                 val resultsList = mediaSource.search(query, extras ?: Bundle.EMPTY)
@@ -408,6 +417,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                 currentPlayer.clearMediaItems()
                 currentPlayer.stop()
             } else if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+                "switchToPlayer, currentPlaylistItems, ${currentPlaylistItems.size}".logv()
                 preparePlaylist(
                     metadataList = currentPlaylistItems,
                     itemToPlay = currentPlaylistItems[currentMediaItemIndex],
@@ -436,6 +446,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                 position
             )
         }
+        "save recent song to storage".logv()
     }
 
     private inner class UampCastSessionAvailabilityListener : SessionAvailabilityListener {
@@ -483,6 +494,7 @@ open class MusicService : MediaBrowserServiceCompat() {
 
         override fun onPrepare(playWhenReady: Boolean) {
             val recentSong = storage.loadRecentSong() ?: return
+            "onPrepare, loadRecentSong, $recentSong".logv()
             onPrepareFromMediaId(
                 recentSong.mediaId!!,
                 playWhenReady,
@@ -495,6 +507,7 @@ open class MusicService : MediaBrowserServiceCompat() {
             playWhenReady: Boolean,
             extras: Bundle?
         ) {
+            "onPrepareFromMediaId, mediaId, $mediaId, playWhenReady, extras: $extras".logv()
             mediaSource.whenReady {
                 val itemToPlay: MediaMetadataCompat? = mediaSource.find { item ->
                     item.id == mediaId
@@ -508,6 +521,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                         extras?.getLong(MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS, C.TIME_UNSET)
                             ?: C.TIME_UNSET
 
+                    "onPrepareFromMediaId, itemToPlay, $itemToPlay".logv()
                     preparePlaylist(
                         buildPlaylist(itemToPlay),
                         itemToPlay,
@@ -530,6 +544,7 @@ open class MusicService : MediaBrowserServiceCompat() {
             mediaSource.whenReady {
                 val metadataList = mediaSource.search(query, extras ?: Bundle.EMPTY)
                 if (metadataList.isNotEmpty()) {
+                    "onPrepareFromSearch, metadataList, ${metadataList.size}".logv()
                     preparePlaylist(
                         metadataList,
                         metadataList[0],

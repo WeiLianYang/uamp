@@ -18,7 +18,6 @@ package com.example.android.uamp
 
 import android.media.AudioManager
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -100,6 +99,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToMediaItem(mediaId: String) {
+        "mediaId: $mediaId".logd()
         var fragment: MediaItemFragment? = getBrowseFragment(mediaId)
         if (fragment == null) {
             fragment = MediaItemFragment.newInstance(mediaId)

@@ -20,6 +20,7 @@ import android.content.Context
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaMetadataCompat
+import com.example.android.uamp.logv
 import com.example.android.uamp.media.MusicService
 import com.example.android.uamp.media.R
 import com.example.android.uamp.media.extensions.album
@@ -113,6 +114,7 @@ class BrowseTree(
 
             // If this was recently played, add it to the recent root.
             if (mediaItem.id == recentMediaId) {
+                "recent media: ${mediaItem.album}".logv()
                 mediaIdToChildren[UAMP_RECENT_ROOT] = mutableListOf(mediaItem)
             }
         }
