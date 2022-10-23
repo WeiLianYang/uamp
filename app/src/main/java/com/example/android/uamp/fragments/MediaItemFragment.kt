@@ -26,6 +26,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.example.android.uamp.MediaItemAdapter
 import com.example.android.uamp.databinding.FragmentMediaitemListBinding
+import com.example.android.uamp.logd
 import com.example.android.uamp.utils.InjectorUtils
 import com.example.android.uamp.viewmodels.MainActivityViewModel
 import com.example.android.uamp.viewmodels.MediaItemFragmentViewModel
@@ -74,6 +75,7 @@ class MediaItemFragment : Fragment() {
 
         mediaItemFragmentViewModel.mediaItems.observe(viewLifecycleOwner,
             Observer { list ->
+                "observe mediaItems, list: $list".logd()
                 binding.loadingSpinner.visibility =
                     if (list?.isNotEmpty() == true) View.GONE else View.VISIBLE
                 listAdapter.submitList(list)

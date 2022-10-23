@@ -164,6 +164,22 @@ class MainActivityViewModel(
         }
     }
 
+    fun skipToNext() {
+        musicServiceConnection.player?.seekToNextMediaItem()
+    }
+
+    fun skipToPrevious() {
+        musicServiceConnection.player?.seekToPreviousMediaItem()
+    }
+
+    fun back15s() {
+        musicServiceConnection.player?.seekBack()
+    }
+
+    fun forward15s() {
+        musicServiceConnection.player?.seekForward()
+    }
+
     class Factory(
         private val musicServiceConnection: MusicServiceConnection
     ) : ViewModelProvider.NewInstanceFactory() {

@@ -102,6 +102,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToMediaItem(mediaId: String) {
+        "mediaId: $mediaId".logd()
         var fragment: MediaItemFragment? = getBrowseFragment(mediaId)
         if (fragment == null) {
             fragment = MediaItemFragment.newInstance(mediaId)

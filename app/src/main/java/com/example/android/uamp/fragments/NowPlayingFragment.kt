@@ -96,6 +96,18 @@ class NowPlayingFragment : Fragment() {
                 mainActivityViewModel.playMedia(it, pauseThenPlaying = true)
             }
         }
+        binding.btnPrevious.setOnClickListener {
+            mainActivityViewModel.skipToPrevious()
+        }
+        binding.btnNext.setOnClickListener {
+            mainActivityViewModel.skipToNext()
+        }
+        binding.btnBack15s.setOnClickListener {
+            mainActivityViewModel.back15s()
+        }
+        binding.btnForward.setOnClickListener {
+            mainActivityViewModel.forward15s()
+        }
 
         // Initialize playback duration and position to zero
         binding.duration.text = timestampToMSS(context, 0L)

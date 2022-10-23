@@ -21,6 +21,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import com.example.android.uamp.logv
 import com.example.android.uamp.media.MusicService
 import com.example.android.uamp.media.R
 import com.example.android.uamp.media.extensions.urlEncoded
@@ -121,6 +122,7 @@ class BrowseTree(
 
             // If this was recently played, add it to the recent root.
             if (mediaItem.mediaId == recentMediaId) {
+                "recent media: ${mediaItem}".logv()
                 mediaIdToChildren[UAMP_RECENT_ROOT] = mutableListOf(mediaItem)
             }
             mediaIdToMediaItem[mediaItem.mediaId] = mediaItem
