@@ -33,6 +33,8 @@ import com.example.android.uamp.common.MusicServiceConnection
 import com.example.android.uamp.common.NOTHING_PLAYING
 import com.example.android.uamp.common.PlaybackState
 import com.example.android.uamp.fragments.MediaItemFragment
+import com.example.android.uamp.logd
+import com.example.android.uamp.logi
 import kotlinx.coroutines.launch
 
 /**
@@ -113,6 +115,7 @@ class MediaItemFragmentViewModel(
                     /* parentMediaId= */ mediaId
                 )
             }
+            "init getChildren, mediaId: $mediaId, itemsList: ${itemsList.size}".logi()
             _mediaItems.postValue(itemsList)
         }
     }
@@ -150,6 +153,7 @@ class MediaItemFragmentViewModel(
             true -> R.drawable.ic_pause_black_24dp
             else -> R.drawable.ic_play_arrow_black_24dp
         }
+        "updateState, nowPlaying mediaId: ${nowPlaying.mediaId}".logi()
 
         return mediaItems.value?.map {
             val useResId = if (it.mediaItem.mediaId == nowPlaying.mediaId) newResId else NO_RES

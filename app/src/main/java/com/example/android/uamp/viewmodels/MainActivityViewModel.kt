@@ -33,6 +33,8 @@ import com.example.android.uamp.MainActivity
 import com.example.android.uamp.MediaItemData
 import com.example.android.uamp.common.MusicServiceConnection
 import com.example.android.uamp.fragments.NowPlayingFragment
+import com.example.android.uamp.logd
+import com.example.android.uamp.logw
 import com.example.android.uamp.media.extensions.isEnded
 import com.example.android.uamp.media.extensions.isPlayEnabled
 import com.example.android.uamp.utils.Event
@@ -127,6 +129,7 @@ class MainActivityViewModel(
 
         val isPrepared = player.playbackState != Player.STATE_IDLE
         if (isPrepared && mediaItem.mediaId == nowPlaying?.mediaId) {
+            "playMedia: mediaId: ${mediaItem.mediaId}, playbackState: ${player.playbackState}".logw()
             when {
                 player.isPlaying ->
                     if (pauseThenPlaying) player.pause() else Unit
@@ -150,6 +153,7 @@ class MainActivityViewModel(
                         }
                     }.toMutableList()
                 }
+                "playMedia: parentMediaId: $parentMediaId, playlist: ${playlist.size}".logw()
                 if (playlist.isEmpty()) {
                     playlist.add(mediaItem)
                 }

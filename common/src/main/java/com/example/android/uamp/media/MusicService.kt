@@ -47,6 +47,10 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.example.android.uamp.logd
+import com.example.android.uamp.loge
+import com.example.android.uamp.logi
+import com.example.android.uamp.logw
 import com.example.android.uamp.media.library.BrowseTree
 import com.example.android.uamp.media.library.JsonSource
 import com.example.android.uamp.media.library.MEDIA_SEARCH_SUPPORTED
@@ -180,6 +184,7 @@ open class MusicService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
 
+        "---> onCreate <---".logd()
         if (castPlayer?.isCastSessionAvailable == true) {
             replaceableForwardingPlayer.setPlayer(castPlayer!!)
         }
@@ -214,6 +219,7 @@ open class MusicService : MediaLibraryService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+        "---> onGetSession <---".logd()
         return if ("android.media.session.MediaController" == controllerInfo.packageName
             || packageValidator.isKnownCaller(controllerInfo.packageName, controllerInfo.uid)) {
             mediaSession
@@ -222,6 +228,7 @@ open class MusicService : MediaLibraryService() {
 
     /** Called when swiping the activity away from recents. */
     override fun onTaskRemoved(rootIntent: Intent) {
+        "---> onTaskRemoved <---".loge()
         saveRecentSongToStorage()
         super.onTaskRemoved(rootIntent)
         // The choice what to do here is app specific. Some apps stop playback, while others allow
@@ -231,6 +238,7 @@ open class MusicService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        "---> onDestroy <---".loge()
         super.onDestroy()
         releaseMediaSession()
     }
@@ -333,6 +341,7 @@ open class MusicService : MediaLibraryService() {
             } else {
                 catalogueRootMediaItem
             }
+            "---> onGetLibraryRoot <---, rootMediaItem mediaId: ${rootMediaItem.mediaId}".logi()
             return Futures.immediateFuture(LibraryResult.ofItem(rootMediaItem, libraryParams))
         }
 
@@ -345,6 +354,7 @@ open class MusicService : MediaLibraryService() {
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
             if (parentId == recentRootMediaItem.mediaId) {
+                "---> onGetChildren <---, return recentRootMediaItem".logi()
                 return Futures.immediateFuture(
                     LibraryResult.ofItemList(
                         storage.loadRecentSong()?.let {
@@ -354,6 +364,7 @@ open class MusicService : MediaLibraryService() {
                     )
                 )
             }
+            "---> onGetChildren <---, parentId: $parentId".logi()
             return callWhenMusicSourceReady {
                 LibraryResult.ofItemList(
                     browseTree[parentId] ?: ImmutableList.of(),
@@ -367,6 +378,7 @@ open class MusicService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             mediaId: String
         ): ListenableFuture<LibraryResult<MediaItem>> {
+            "---> onGetItem <---, mediaId: $mediaId".logi()
             return callWhenMusicSourceReady {
                 LibraryResult.ofItem(
                     browseTree.getMediaItemByMediaId(mediaId) ?: MediaItem.EMPTY,
@@ -408,6 +420,7 @@ open class MusicService : MediaLibraryService() {
             controller: MediaSession.ControllerInfo,
             mediaItems: MutableList<MediaItem>
         ): ListenableFuture<MutableList<MediaItem>> {
+            "---> onAddMediaItems <---, mediaItems: ${mediaItems.size}".logi()
             return callWhenMusicSourceReady {
                 mediaItems.map { browseTree.getMediaItemByMediaId(it.mediaId)!! }.toMutableList()
             }
@@ -430,6 +443,7 @@ open class MusicService : MediaLibraryService() {
          * remote Cast receiver rather than play audio locally.
          */
         override fun onCastSessionAvailable() {
+            "---> onCastSessionAvailable <---".logi()
             replaceableForwardingPlayer.setPlayer(castPlayer!!)
         }
 
@@ -437,6 +451,7 @@ open class MusicService : MediaLibraryService() {
          * Called when a Cast session has ended and the user wishes to control playback locally.
          */
         override fun onCastSessionUnavailable() {
+            "---> onCastSessionUnavailable <---".logw()
             replaceableForwardingPlayer.setPlayer(exoPlayer)
         }
     }
@@ -444,6 +459,7 @@ open class MusicService : MediaLibraryService() {
     /** Listen for events from ExoPlayer. */
     private inner class PlayerEventListener : Listener {
         override fun onEvents(player: Player, events: Player.Events) {
+            "---> PlayerEventListener.onEvents <---, events: $events".logw()
             if (events.contains(EVENT_POSITION_DISCONTINUITY)
                 || events.contains(EVENT_MEDIA_ITEM_TRANSITION)
                 || events.contains(EVENT_PLAY_WHEN_READY_CHANGED)) {
@@ -459,6 +475,7 @@ open class MusicService : MediaLibraryService() {
                 || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND) {
                 message = R.string.error_media_not_found;
             }
+            "---> PlayerEventListener.onPlayerError <---, message: $message".logw()
             Toast.makeText(
                 applicationContext,
                 message,
