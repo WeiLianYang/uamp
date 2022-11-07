@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+}
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -46,11 +47,11 @@ android {
 }
 
 dependencies {
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines_version"
 
     api "androidx.media:media:$androidx_media_version"
+    implementation "androidx.appcompat:appcompat:1.5.1"
 
     api "com.google.code.gson:gson:$gson_version"
 

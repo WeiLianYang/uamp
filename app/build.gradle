@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+}
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -61,8 +62,6 @@ dependencies {
     implementation "com.android.support:multidex:$multidex_version"
 
     implementation project(':common')
-
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     implementation "androidx.appcompat:appcompat:$androidx_app_compat_version"
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
