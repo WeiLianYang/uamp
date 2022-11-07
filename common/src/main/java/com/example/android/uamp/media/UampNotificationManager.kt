@@ -20,6 +20,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -69,13 +70,15 @@ internal class UampNotificationManager(
         notificationManager.setSmallIcon(R.drawable.ic_notification)
         notificationManager.setUseRewindAction(false)
         notificationManager.setUseFastForwardAction(false)
+        notificationManager.setColorized(true)
+        notificationManager.setColor(Color.parseColor("#ff255c"))
     }
 
     fun hideNotification() {
         notificationManager.setPlayer(null)
     }
 
-    fun showNotificationForPlayer(player: Player){
+    fun showNotificationForPlayer(player: Player) {
         notificationManager.setPlayer(player)
     }
 

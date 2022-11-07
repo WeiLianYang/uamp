@@ -20,6 +20,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
@@ -58,7 +59,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EVENT_MEDIA_ITEM_TRANSITION
 import com.google.android.exoplayer2.Player.EVENT_PLAY_WHEN_READY_CHANGED
 import com.google.android.exoplayer2.Player.EVENT_POSITION_DISCONTINUITY
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.cast.CastPlayer
 import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
@@ -70,7 +70,6 @@ import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.NonCancellable.children
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
@@ -103,7 +102,7 @@ open class MusicService : MediaBrowserServiceCompat() {
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
-    protected lateinit var mediaSession: MediaSessionCompat
+    private lateinit var mediaSession: MediaSessionCompat
     protected lateinit var mediaSessionConnector: MediaSessionConnector
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
     private var currentMediaItemIndex: Int = 0
@@ -125,7 +124,7 @@ open class MusicService : MediaBrowserServiceCompat() {
         Uri.parse("https://storage.googleapis.com/uamp/catalog.json")
 
     private val uAmpAudioAttributes = AudioAttributes.Builder()
-        .setContentType(C.CONTENT_TYPE_MUSIC)
+        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
         .build()
 
@@ -136,7 +135,7 @@ open class MusicService : MediaBrowserServiceCompat() {
      * See [Player.AudioComponent.setAudioAttributes] for details.
      */
     private val exoPlayer: ExoPlayer by lazy {
-        SimpleExoPlayer.Builder(this).build().apply {
+        ExoPlayer.Builder(this).build().apply {
             setAudioAttributes(uAmpAudioAttributes, true)
             setHandleAudioBecomingNoisy(true)
             addListener(playerListener)
@@ -171,7 +170,11 @@ open class MusicService : MediaBrowserServiceCompat() {
         // Build a PendingIntent that can be used to launch the UI.
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
-                PendingIntent.getActivity(this, 0, sessionIntent, 0)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.getActivity(this, 0, sessionIntent, PendingIntent.FLAG_IMMUTABLE)
+                } else {
+                    PendingIntent.getActivity(this, 0, sessionIntent, 0)
+                }
             }
 
         // Create a new MediaSession.
@@ -609,7 +612,9 @@ open class MusicService : MediaBrowserServiceCompat() {
      */
     private inner class PlayerEventListener : Player.Listener {
 
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            "onPlaybackStateChanged, playbackState: $playbackState".logv()
             when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
@@ -620,20 +625,24 @@ open class MusicService : MediaBrowserServiceCompat() {
                         // storage so that playback can be resumed between device reboots.
                         // Search for "media resumption" for more information.
                         saveRecentSongToStorage()
-
-                        if (!playWhenReady) {
-                            // If playback is paused we remove the foreground state which allows the
-                            // notification to be dismissed. An alternative would be to provide a
-                            // "close" button in the notification which stops playback and clears
-                            // the notification.
-                            stopForeground(false)
-                            isForegroundService = false
-                        }
                     }
                 }
                 else -> {
                     notificationManager.hideNotification()
                 }
+            }
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
+            "onPlayWhenReadyChanged, playWhenReady: $playWhenReady, reason: $reason".logv()
+            if (!playWhenReady) {
+                // If playback is paused we remove the foreground state which allows the
+                // notification to be dismissed. An alternative would be to provide a
+                // "close" button in the notification which stops playback and clears
+                // the notification.
+                stopForeground(false)
+                isForegroundService = false
             }
         }
 
